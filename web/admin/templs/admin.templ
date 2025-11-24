@@ -1,0 +1,118 @@
+package templs
+
+import "strconv"
+
+templ head() {
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+		<!-- HTMX library -->
+		<script src="https://unpkg.com/htmx.org@1.9.0"></script>
+		<!-- Optional: Hyperscript for enhanced scripting if needed -->
+		<script src="https://unpkg.com/hyperscript.org@0.9.5"></script>
+	</head>
+}
+
+templ AdminGUI() {
+	<!DOCTYPE html>
+	<html lang="en" data-critters-container>
+		//head
+		@head()
+		//  //body
+		<body>
+			Welcome to the admin console, here you can update the data
+			<br/>
+			<a hx-get="/readtable/PIN_Table/" hx-target="#tablecontent">PIN_Table</a>
+			<div id="tablecontent"></div>
+		</body>
+	</html>
+}
+
+templ ReadTable(tablename string, rows [][]string) {
+	{ tablename }
+	<table class="table-auto md:table-fixed  border border-gray-300">
+		<thead>
+			<tr class="bg-gray-100">
+				for _,fieldTitle := range rows[0] {
+					<th class="px-4 py-2 border-b">{ fieldTitle }</th>
+				}
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			for idx,row := range rows[1:] {
+				<tr id={ "row" + strconv.Itoa(idx) }>
+					for _,fieldTitle := range row {
+						<td class="px-4 py-2 border-b">{ fieldTitle }</td>
+					}
+					<td class="px-4 py-2 border-b w-50">
+						<button
+							hx-get={ "/editrow/" + tablename + "/" + row[0] + "/" + strconv.Itoa(idx) + "/" }
+							hx-target={ "#row" + strconv.Itoa(idx) }
+							hx-swap="outerHTML"
+							class="bg-blue-500 text-white px-3 py-1 rounded"
+						>
+							Edit
+						</button>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+templ EditRow(tablename string, idx string, titles []string, row []string) {
+	<tr id={ "row" + idx }>
+		for i,field := range row {
+			if i==0 {
+				<td class="px-4 py-1 border-b">
+					{ row[0] }
+				</td>
+			} else {
+				<td class="px-4 py-2 border-b">
+					<input type="text" name={ titles[i] } value={ field } class="border p-1 w-full"/>
+				</td>
+			}
+		}
+		<td class="px-4 py-4 border-b flex items-center w-50">
+			<button
+				hx-post={ "/saverow/" + tablename + "/" + row[0] + "/" + idx + "/" }
+				hx-include="closest tr"
+				hx-target={ "#row" + idx }
+				hx-swap="outerHTML"
+				class="bg-green-500 text-white px-3 py-1 rounded mr-1"
+			>
+				Save
+			</button>
+			<button
+				hx-get={ "/readrow/" + tablename + "/" + row[0] + "/" + idx + "/" }
+				hx-target={ "#row" + idx }
+				hx-swap="outerHTML"
+				class="bg-gray-300 px-3 py-1 rounded"
+			>
+				Cancel
+			</button>
+		</td>
+	</tr>
+}
+
+templ ReadRow(tablename string, idx string, row []string) {
+	<tr id={ "row" + idx }>
+		for _,field := range row {
+			<td class="px-4 py-2 border-b">
+				{ field }
+			</td>
+		}
+		<td class="px-4 py-2 border-b">
+			<button
+				hx-get={ "/editrow/" + tablename + "/" + row[0] + "/" + idx + "/" }
+				hx-target={ "#row" + idx }
+				hx-swap="outerHTML"
+				class="bg-blue-500 text-white px-3 py-1 rounded"
+			>
+				Edit
+			</button>
+		</td>
+	</tr>
+}

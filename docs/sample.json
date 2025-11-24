@@ -1,0 +1,24 @@
+{
+  "records": [
+    {
+      "id": "reclxUK3Xn1kaWcnE",
+      "fields": {
+        "PIN": "12345",
+        "Customer_Name": "Demo Org A",
+        "Customer_Support_Class": "Standard",
+        "CLI": "441234567890",
+        "Products": "SD-wan\nWebex Calling"
+      }
+    },
+    {
+      "id": "reclxUK3Xn1kaWcnE",
+      "fields": {
+        "PIN": "45678",
+        "Customer_Name": "Demo Org B",
+        "Customer_Support_Class": "Standard",
+        "CLI": "441234567890",
+        "Products": "SD-wan\nWebex Calling"
+      }
+    }
+  ]
+}

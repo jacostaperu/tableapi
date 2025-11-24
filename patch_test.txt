@@ -1,0 +1,16 @@
+curl -X PATCH "http://localhost:8087/records/PIN_Table/" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "records": [
+      {
+        "id": "sthascdloaaee",
+        "fields": {
+          "CLI": "441234567890 ahtsha htshtsh",
+          "Customer_Name": "Demo Org B",
+          "Customer_Support_Class": "Standard",
+          "PIN": "87465",
+          "Products": "SD-wan\nWebex Calling"
+        }
+      }
+    ]
+  }'
