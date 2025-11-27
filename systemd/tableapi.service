@@ -1,0 +1,14 @@
+[Unit]
+Description=table api
+After=network.target
+
+[Service]
+Type=simple
+User=opc
+WorkingDirectory=/opt/tableapi
+ExecStart=/opt/tableapi/tableapi.sh
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
