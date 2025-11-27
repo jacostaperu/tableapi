@@ -44,6 +44,13 @@ archives:
     format_overrides:
       - goos: windows
         formats: [zip]
+    files:
+      - README.md
+      - LICENSE
+      - tableapi.conf.example
+      - tables/ # ← Entire folder
+      - systemd/ # ← Entire folder
+      - docs/ # ← Entire folder
 
 changelog:
   sort: asc
