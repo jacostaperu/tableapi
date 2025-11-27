@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -25,11 +26,29 @@ func main() {
 
 func run() error {
 
+	port := flag.Int("port", 8087, "port to listen on")
+	tablespath := flag.String("tablespath", "tables", "where to store CSV files(remember that a valid file will contain an 'id' column)")
+	verbose := flag.Bool("verbose", false, "enable verbose logging")
+	help := flag.Bool("help", false, "show help")
+
+	flag.Parse()
+	if *help {
+		flag.Usage()
+		os.Exit(0)
+	}
+
+	// Use CLI flags when no config provided
+	fmt.Printf("Port: %d\n", *port)
+	fmt.Printf("Verbose: %v\n", *verbose)
+
 	// Use your certificate and key files
 	//certFile := "server.crt"
 	//keyFile := "server.key"
 
 	myserver := tableapi.NewServer()
+	if *port < 1024 {
+		myserver.Logger.Warnf("Listening to port='%d' (port < 1024) may require elevated privileges, if fail try running with sudo\n", *port)
+	}
 
 	if mode == "prod" {
 		myserver.RunProdMode()
@@ -53,9 +72,11 @@ func run() error {
 
 	handler := c.Handler(mux)
 	//handler := mux
-	port := 8087
-	log.Printf("listening on port =  %d", port)
+
+	myserver.SetTablesPath(*tablespath)
+
+	myserver.Logger.Infof("Listening on port =  %d", *port)
 	//return http.ListenAndServeTLS(fmt.Sprintf(":%d", port), certFile, keyFile, handler)
-	return http.ListenAndServe(fmt.Sprintf(":%d", port), handler)
+	return http.ListenAndServe(fmt.Sprintf(":%d", *port), handler)
 
 }

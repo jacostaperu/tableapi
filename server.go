@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"os"
 
+	"gopkg.in/ini.v1"
+
 	adminGUI "github.com/jacostaperu/tableapi.git/web/admin/templs"
 )
 
@@ -17,7 +19,11 @@ type Server struct {
 	router     *http.ServeMux
 	TablesPath string // relative where the program is run
 	devMode    bool
+	Logger     *Logger
 }
+
+//go:embed configSample.conf
+var configData embed.FS
 
 //go:embed all:static
 var embeddedFiles embed.FS
@@ -27,6 +33,7 @@ func NewServer() *Server {
 		router:     http.NewServeMux(),
 		TablesPath: "tables",
 		devMode:    true,
+		Logger:     NewLogger("debug"),
 	}
 
 	s.routes()
@@ -37,6 +44,9 @@ func NewServer() *Server {
 func (s *Server) RunDevMode() {
 	s.devMode = true
 }
+func (s *Server) SetTablesPath(tablespath string) {
+	s.TablesPath = tablespath
+}
 
 func (s *Server) RunProdMode() {
 	s.devMode = false
@@ -45,7 +55,7 @@ func (s *Server) RunProdMode() {
 func (s *Server) handleFrontEnd() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("aqui estoi iniciando la pagina web %+v  ", s)
+		s.Logger.Debugf("aqui estoi iniciando la pagina web %+v  ", s)
 
 		adminGUI := adminGUI.AdminGUI()
 
@@ -283,4 +293,32 @@ func (s *Server) tabledata2GenericTable(tabledata [][]string) GenericTable {
 		Records: records,
 	}
 	return genericTable
+}
+
+func (s *Server) LoadConfig() (*ini.File, error) {
+	paths := []string{"./tableapi.conf", "/etc/tableapi.conf"}
+	var cfg *ini.File
+	var err error
+	for _, path := range paths {
+		if _, err = os.Stat(path); err == nil {
+			cfg, err = ini.Load(path)
+			if err != nil {
+				return nil, fmt.Errorf("failed to load config from %s: %v", path, err)
+			}
+			fmt.Printf("Loaded config from %s\n", path)
+			return cfg, nil
+		}
+	}
+	return nil, fmt.Errorf("config file not found in any expected location:\n   ./tableapi.conf\n   /etc/tableapi.conf")
+}
+
+func (s *Server) CreateConfig() error {
+	s.Logger.Info("Creating a tableapi.conf")
+	data, err := configData.ReadFile("configSample.conf")
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile("tableapi.conf", []byte(data), 0644)
+	return err
 }

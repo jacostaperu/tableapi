@@ -44,3 +44,20 @@ deploy:
 	# ssh ossmlwweb001.unify.local sudo service boccplus stop
 	# ssh ossmlwweb001.unify.local sudo cp /home/acostaaguinagaj/boccplus /opt/boccplus/boccplus
 	# ssh ossmlwweb001.unify.local sudo service boccplus start
+pushoracle:
+	goreleaser build --snapshot --clean
+	scp dist/tableapi_linux_amd64_v1/server  opc@jjhub.duckdns.org:/home/opc/server
+	ssh  opc@jjhub.duckdns.org sudo systemctl stop tableapi
+	ssh opc@jjhub.duckdns.org ./install.sh
+
+release:
+	goreleaser build
+
+
+setup:
+	# install cron to update duckdns
+	scp -r opc/* opc@jjhub.duckdns.org:/home/opc/
+	scp dist/tableapi_linux_amd64_v1/server opc@jjhub.duckdns.org:/home/opc/server
+	ssh  opc@jjhub.duckdns.org sudo systemctl stop tableapi
+	ssh opc@jjhub.duckdns.org chmod 755 install.sh
+	ssh opc@jjhub.duckdns.org ./install.sh

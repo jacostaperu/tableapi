@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"reflect"
+	"strings"
 	"sync"
 )
 
@@ -98,6 +100,26 @@ func (s *Server) handleRecords() http.HandlerFunc {
 }
 
 // PATCH /records/{id} -> partial update of Fields
+// here an example
+/*
+ * curl -X PATCH "http://localhost:8087/records/PIN_Table/sthascdloaaee" \
+   -H "Content-Type: application/json" \
+   -d '{
+     "records": [
+       {
+         "id": "sthascdloaaee",
+         "fields": {
+           "CLI": "441234567890 ahtsha htshtsh",
+           "Customer_Name": "Demo Org B",
+           "Customer_Support_Class": "Standard",
+           "PIN": "87465",
+           "Products": "SD-wan\nWebex Calling"
+         }
+       }
+     ]
+   }'
+*/
+
 func (s *Server) handleRecordID() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -107,12 +129,14 @@ func (s *Server) handleRecordID() http.HandlerFunc {
 			return
 		}
 
-		id := r.URL.Path[len("/records/"):]
+		tablename := r.PathValue("tablename")
+		id := r.PathValue("id")
+
 		if id == "" {
 			http.Error(w, "missing id", http.StatusBadRequest)
 			return
 		}
-
+		log.Println(tablename, id)
 		// expected body: {"records":[{"id":"sameID","fields":{...}}]}
 		var incoming GenericTable
 		if err := json.NewDecoder(r.Body).Decode(&incoming); err != nil {
@@ -128,20 +152,56 @@ func (s *Server) handleRecordID() http.HandlerFunc {
 		mu.Lock()
 		defer mu.Unlock()
 
-		for i := range store.Records {
-			if store.Records[i].ID == id {
-				if store.Records[i].Fields == nil {
-					store.Records[i].Fields = map[string]string{}
-				}
-				for k, v := range patch.Fields {
-					store.Records[i].Fields[k] = v // merge/overwrite fields
-				}
-				json.NewEncoder(w).Encode(store.Records[i])
-				return
-			}
+		tabledata, err := s.loadCSV(tablename)
+		if err != nil {
+			http.Error(w, "error reading table", http.StatusBadRequest)
 		}
 
-		http.Error(w, "record not found", http.StatusNotFound)
+		titles := buildTitles(tabledata[0])
+
+		for i, record := range tabledata {
+			if record[0] == id {
+				//found
+				log.Print("found", i)
+
+				for k, v := range patch.Fields {
+					log.Printf("Updating %s to %s \n", k, v)
+					tabledata[i][titles[k]] = strings.ReplaceAll(v, "\n", `\n`)
+				}
+			}
+		}
+		err = s.saveCSV(tablename, tabledata)
+		if err != nil {
+			http.Error(w, "error writing table", http.StatusBadRequest)
+		}
+
 	}
+
+}
+
+func getFieldNames(i interface{}) []string {
+	val := reflect.ValueOf(i)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+	typ := val.Type()
+
+	var fields []string
+	for i := 0; i < val.NumField(); i++ {
+		// only export fields have names accessible
+		field := typ.Field(i)
+		if field.PkgPath == "" { // check if exported
+			fields = append(fields, field.Name)
+		}
+	}
+	return fields
+}
+
+func buildTitles(titlesarr []string) map[string]int {
+	titles := make(map[string]int)
+	for i, name := range titlesarr {
+		titles[name] = i
+	}
+	return titles
 
 }

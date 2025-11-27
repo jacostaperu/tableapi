@@ -16,7 +16,11 @@ before:
     - go generate ./...
 
 builds:
-  - env:
+  - id: tableapi
+    main: ./cmd/
+    binary: server # output binary name
+
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
@@ -49,7 +53,10 @@ changelog:
       - "^test:"
 
 release:
+  github:
+    owner: jacostaperu
   footer: >-
+
 
     ---
 
