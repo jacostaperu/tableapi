@@ -47,7 +47,7 @@ archives:
     files:
       - README.md
       - LICENSE
-      - tableapi.conf.example
+      - tableapi.conf
       - tables/ # ← Entire folder
       - systemd/ # ← Entire folder
       - docs/ # ← Entire folder
