@@ -10,7 +10,7 @@ else
 fi
 
 #looking for current instances
-PID=$(ss -tlnp | grep :8087 | awk '{print $7}' | cut -d',' -f2 | cut -d'=' -f2)
+PID=$(ss -tlnp | grep :8087 | awk '{print $6}' | cut -d',' -f2 | cut -d'=' -f2)
 
 if [ -n "$PID" ]; then
   echo "Found server process listening on port 8087 with PID: $PID"
@@ -21,7 +21,7 @@ if [ -n "$PID" ]; then
     kill "$PID"
     echo "Process $PID has been killed."
 
-    PID=$(ss -tlnp | grep :8087 | awk '{print $7}' | cut -d',' -f2 | cut -d'=' -f2)
+    PID=$(ss -tlnp | grep :8087 | awk '{print $6}' | cut -d',' -f2 | cut -d'=' -f2)
 
     if [ -n "$PID" ]; then
       echo "Oh no, I couldn't eliminate : $PID"
@@ -40,7 +40,7 @@ else
 fi
 
 
-
+echo Deploying updated binaries
 
 
 mkdir -p /opt/tableapi/bin
@@ -49,11 +49,17 @@ chmod 755 /opt/tableapi/bin
 chmod 755 /opt/tableapi/tables
 
 #copy the binaries
-install server /opt/tableapi/bin
+if ! install server /opt/tableapi/bin; then
+  echo "Failed to install "server" to /opt/tableapi/bin" >&2
+  echo "please fix the error and try again...Good bye"
+  exit 1
+else
+    echo Binaries installed OK!!!!
+fi
+
 cp tables/PIN_Table.csv /opt/tableapi/tables
 
-
-if [ -e destination.txt ]; then
+if [ -e  /opt/tableapi/tables/PIN_Table.csv ]; then
   echo "Warning: /opt/tableapi/tables/PIN_Table.csv already exists, then NOT overwriting it!" >&2
 else
   cp ./server /opt/tableapi/bin
