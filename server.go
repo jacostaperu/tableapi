@@ -46,6 +46,7 @@ func (s *Server) RunDevMode() {
 }
 func (s *Server) SetTablesPath(tablespath string) {
 	s.TablesPath = tablespath
+
 }
 
 func (s *Server) RunProdMode() {

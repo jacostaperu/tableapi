@@ -50,6 +50,7 @@ chmod 755 /opt/tableapi/tables
 
 #copy the binaries
 install server /opt/tableapi/bin
+cp tables/PIN_Table.csv /opt/tableapi/tables
 
 
 if [ -e destination.txt ]; then
@@ -76,6 +77,7 @@ RestartSec=5s
 WantedBy=multi-user.target
 EOF
 
+sudo chown -R $SUDO_USER /opt/tableapi
 
 systemctl daemon-reload
 systemctl enable tableapi
