@@ -47,8 +47,8 @@ archives:
     files:
       - README.md
       - LICENSE
+      - installer_linux.sh
       - tables/ # ← Entire folder
-      - systemd/ # ← Entire folder
       - docs/ # ← Entire folder
 
 changelog:
